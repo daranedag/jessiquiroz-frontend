@@ -1,13 +1,30 @@
 ---
-import { supabase } from "../db/supabase";
-
-const { data, error } = await supabase
-  .from("reflection_items")
-  .select("id, category, title, front_text, back_text, tone")
-  .eq("is_published", true)
-  .order("sort_order", { ascending: true });
-
-const reflectionItems = data ?? [];
+const reflectionItems = [
+  {
+    id: "calma",
+    category: "Calma",
+    title: "Respirar también es volver",
+    front_text: "Un instante de pausa puede abrir espacio donde antes había ruido.",
+    back_text: "Tu cuerpo sabe bajar el ritmo cuando encuentra un lugar seguro.",
+    tone: "primary",
+  },
+  {
+    id: "presencia",
+    category: "Presencia",
+    title: "Habitar el presente",
+    front_text: "La transformación suele comenzar cuando dejamos de apurarnos.",
+    back_text: "No todo proceso necesita fuerza; algunos necesitan ternura.",
+    tone: "secondary",
+  },
+  {
+    id: "cuidado",
+    category: "Cuidado",
+    title: "Belleza que nace adentro",
+    front_text: "El brillo exterior se sostiene mejor cuando hay paz interior.",
+    back_text: "Cuidarte también es una forma de escucharte.",
+    tone: "accent",
+  },
+];
 
 const toneClasses: Record<string, string> = {
   primary: "bg-primary/90 text-white",
@@ -17,9 +34,6 @@ const toneClasses: Record<string, string> = {
 
 const getToneClass = (tone?: string) => toneClasses[tone ?? ""] ?? toneClasses.primary;
 
-if (error) {
-  console.error("Supabase reflection_items error:", error);
-}
 ---
 
 <section id="reflexiones" class="py-16">

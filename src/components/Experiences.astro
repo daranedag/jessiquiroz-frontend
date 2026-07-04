@@ -1,18 +1,27 @@
 ---
-import { supabase } from "../db/supabase";
-
-const { data, error } = await supabase
-  .from("experience_items")
-  .select("id, year, icon, title, description")
-  .eq("is_published", true)
-  .order("sort_order", { ascending: true })
-  .order("year", { ascending: true });
-
-const experienceItems = data ?? [];
-
-if (error) {
-  console.error("Supabase experience_items error:", error);
-}
+const experienceItems = [
+  {
+    id: "vocacion",
+    year: "Inicio",
+    icon: "favorite",
+    title: "Vocación de acompañamiento",
+    description: "Un camino enfocado en escuchar procesos personales con respeto, calma y presencia.",
+  },
+  {
+    id: "formacion",
+    year: "Formación",
+    icon: "school",
+    title: "Aprendizaje continuo",
+    description: "Estudios y talleres orientados a integrar bienestar emocional, corporal y energético.",
+  },
+  {
+    id: "practica",
+    year: "Hoy",
+    icon: "spa",
+    title: "Práctica holística",
+    description: "Sesiones personalizadas que combinan cuidado externo y equilibrio interior.",
+  },
+];
 ---
 
 <section id="experiencias" class="bg-background-alt/40 py-16">

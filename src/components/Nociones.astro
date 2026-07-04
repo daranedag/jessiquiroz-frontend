@@ -1,17 +1,24 @@
 ---
-import { supabase } from "../db/supabase";
-
-const { data, error } = await supabase
-  .from("notion_items")
-  .select("id, icon, title, description")
-  .eq("is_published", true)
-  .order("sort_order", { ascending: true });
-
-const notionItems = data ?? [];
-
-if (error) {
-  console.error("Supabase notion_items error:", error);
-}
+const notionItems = [
+  {
+    id: "escucha",
+    icon: "hearing",
+    title: "Escucha profunda",
+    description: "Cada sesión parte desde una mirada cuidadosa del momento actual de la persona.",
+  },
+  {
+    id: "cuerpo",
+    icon: "accessibility_new",
+    title: "Cuerpo presente",
+    description: "El trabajo corporal se integra como una vía concreta para liberar tensión.",
+  },
+  {
+    id: "energia",
+    icon: "auto_awesome",
+    title: "Equilibrio energético",
+    description: "La práctica busca ordenar, suavizar y acompañar el bienestar desde adentro.",
+  },
+];
 ---
 
 <section id="nociones" class="bg-background-alt/40 py-16">

@@ -1,17 +1,27 @@
 ---
-import { supabase } from "../db/supabase";
-
-const { data, error } = await supabase
-  .from("testimonial_items")
-  .select("id, quote, person_name, person_role, initials")
-  .eq("is_published", true)
-  .order("sort_order", { ascending: true });
-
-const testimonialItems = data ?? [];
-
-if (error) {
-  console.error("Supabase testimonial_items error:", error);
-}
+const testimonialItems = [
+  {
+    id: "maria",
+    quote: "Sentí una calma profunda y un cambio visible en mi rostro después de la sesión.",
+    person_name: "María",
+    person_role: "Paciente",
+    initials: "M",
+  },
+  {
+    id: "paula",
+    quote: "El acompañamiento fue respetuoso, cercano y muy cuidadoso con mi proceso.",
+    person_name: "Paula",
+    person_role: "Paciente",
+    initials: "P",
+  },
+  {
+    id: "carolina",
+    quote: "Me ayudó a reconectar con mi cuerpo desde un lugar más amable.",
+    person_name: "Carolina",
+    person_role: "Paciente",
+    initials: "C",
+  },
+];
 ---
 
 <section id="testimonios" class="bg-background-alt/60 py-16">

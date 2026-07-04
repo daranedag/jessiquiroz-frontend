@@ -1,8 +1,14 @@
+---
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const logoColor = `${basePath}/logo_color.png`;
+const logoWhite = `${basePath}/logo_blanco.png`;
+---
+
 <header class="fixed inset-x-0 top-0 z-50 border-b border-primary/10 bg-background/80 backdrop-blur">
   <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
     <a href="#inicio" class="flex items-center gap-3">
-      <img src="/logo_color.png" alt="Logo JQ color" class="h-16 w-auto dark:hidden" />
-      <img src="/logo_blanco.png" alt="Logo JQ blanco" class="hidden h-16 w-auto dark:block" />
+      <img src={logoColor} alt="Logo JQ color" class="h-16 w-auto dark:hidden" />
+      <img src={logoWhite} alt="Logo JQ blanco" class="hidden h-16 w-auto dark:block" />
       <span class="font-display text-xl font-semibold text-primary">Jessica Quiroz</span>
     </a>
     <nav class="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.2em] text-text-main lg:flex">
@@ -26,7 +32,7 @@
       <a class="hover:text-primary transition-colors" href="#rejuvenecimiento">Rejuvenecimiento</a>
       <a class="hover:text-primary transition-colors" href="#testimonios">Testimonios</a>
       <a class="hover:text-primary transition-colors" href="#reflexiones">Reflexiones</a>
-      <a class="rounded-full bg-cta px-5 py-2 text-text-main shadow-lg ring-2 ring-cta/70 transition hover:-translate-y-0.5 hover:shadow-2xl" href="#contacto">Reservar</a>
+      <a class="rounded-full bg-cta px-5 py-2 text-text-main shadow-lg ring-2 ring-cta/70 transition hover:-translate-y-0.5 hover:shadow-2xl" href="#agendamiento">Reservar</a>
     </nav>
     <button
       class="flex items-center justify-center rounded-full border border-primary px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary lg:hidden"
@@ -58,7 +64,7 @@
       <a class="hover:text-primary transition-colors" href="#rejuvenecimiento">Rejuvenecimiento</a>
       <a class="hover:text-primary transition-colors" href="#testimonios">Testimonios</a>
       <a class="hover:text-primary transition-colors" href="#reflexiones">Reflexiones</a>
-      <a class="rounded-full bg-cta px-5 py-2 text-center text-text-main shadow-lg ring-2 ring-cta/70 transition hover:-translate-y-0.5 hover:shadow-2xl" href="#contacto">Reservar</a>
+      <a class="rounded-full bg-cta px-5 py-2 text-center text-text-main shadow-lg ring-2 ring-cta/70 transition hover:-translate-y-0.5 hover:shadow-2xl" href="#agendamiento">Reservar</a>
     </nav>
   </div>
 </header>

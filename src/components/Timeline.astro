@@ -1,18 +1,24 @@
 ---
-import { supabase } from "../db/supabase";
-
-const { data, error } = await supabase
-  .from("timeline_items")
-  .select("id, year, title, description")
-  .eq("is_published", true)
-  .order("sort_order", { ascending: true })
-  .order("year", { ascending: true });
-
-const timelineItems = data ?? [];
-
-if (error) {
-  console.error("Supabase timeline_items error:", error);
-}
+const timelineItems = [
+  {
+    id: "inicio",
+    year: "Inicio",
+    title: "Primeros pasos",
+    description: "Comienzo de un recorrido personal y profesional ligado al bienestar integral.",
+  },
+  {
+    id: "estudios",
+    year: "Formación",
+    title: "Estudios terapéuticos",
+    description: "Aprendizajes en técnicas energéticas, cuidado corporal y rejuvenecimiento.",
+  },
+  {
+    id: "consulta",
+    year: "Actualidad",
+    title: "Sesiones personalizadas",
+    description: "Acompañamiento individual para procesos de armonización, cuidado y transformación.",
+  },
+];
 ---
 
 <section id="cronologia" class="bg-background-alt/60 py-16">

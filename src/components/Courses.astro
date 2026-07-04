@@ -1,17 +1,27 @@
 ---
-import { supabase } from "../db/supabase";
-
-const { data, error } = await supabase
-  .from("training_items")
-  .select("id, category, icon, title, description")
-  .eq("is_published", true)
-  .order("sort_order", { ascending: true });
-
-const trainingItems = data ?? [];
-
-if (error) {
-  console.error("Supabase training_items error:", error);
-}
+const trainingItems = [
+  {
+    id: "energia",
+    category: "Energía",
+    icon: "self_improvement",
+    title: "Sanación energética",
+    description: "Prácticas de armonización para acompañar procesos emocionales y corporales.",
+  },
+  {
+    id: "facial",
+    category: "Facial",
+    icon: "spa",
+    title: "Rejuvenecimiento consciente",
+    description: "Técnicas faciales y corporales integradas con respiración y presencia.",
+  },
+  {
+    id: "rituales",
+    category: "Bienestar",
+    icon: "local_florist",
+    title: "Rituales terapéuticos",
+    description: "Herramientas para sostener calma, claridad y autocuidado entre sesiones.",
+  },
+];
 ---
 
 <section id="cursos" class="py-16">

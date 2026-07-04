@@ -1,8 +1,8 @@
 {
-  "name": "",
+  "name": "jessiquiroz-frontend",
   "type": "module",
   "version": "0.0.1",
-  "packageManager": "bun@1.1.0",
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -10,7 +10,6 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.93.3",
     "astro": "5.17.0"
   },
   "devDependencies": {
