@@ -1,7 +1,7 @@
 ---
-const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL ?? "";
-const apiV1Path = import.meta.env.PUBLIC_API_V1_PATH ?? "/api/v1";
-const appTimezone = import.meta.env.PUBLIC_APP_TIMEZONE ?? "America/Santiago";
+const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || "";
+const apiV1Path = import.meta.env.PUBLIC_API_V1_PATH || "/api/v1";
+const appTimezone = import.meta.env.PUBLIC_APP_TIMEZONE || "America/Santiago";
 ---
 
 <section
@@ -211,8 +211,8 @@ const appTimezone = import.meta.env.PUBLIC_APP_TIMEZONE ?? "America/Santiago";
     const submitButton = flow.querySelector<HTMLButtonElement>("[data-submit-button]");
     const indicators = Array.from(flow.querySelectorAll<HTMLElement>("[data-step-indicator]"));
 
-    const apiBaseUrl = flow.dataset.apiBaseUrl?.replace(/\/$/, "") ?? "";
-    const apiV1Path = flow.dataset.apiV1Path?.replace(/^\/?/, "/").replace(/\/$/, "") ?? "/api/v1";
+    const apiBaseUrl = flow.dataset.apiBaseUrl?.replace(/\/$/, "") || "";
+    const apiV1Path = flow.dataset.apiV1Path?.replace(/^\/?/, "/").replace(/\/$/, "") || "/api/v1";
     const timezone = flow.dataset.appTimezone || "America/Santiago";
     const maxFiles = 6;
     const maxFileSize = 8 * 1024 * 1024;

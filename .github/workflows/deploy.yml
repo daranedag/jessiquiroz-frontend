@@ -18,19 +18,28 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    env:
+      PUBLIC_API_BASE_URL: ${{ vars.PUBLIC_API_BASE_URL || secrets.PUBLIC_API_BASE_URL }}
+      PUBLIC_API_V1_PATH: ${{ vars.PUBLIC_API_V1_PATH }}
+      PUBLIC_APP_TIMEZONE: ${{ vars.PUBLIC_APP_TIMEZONE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Validate public backend configuration
+        run: |
+          if [ -z "$PUBLIC_API_BASE_URL" ]; then
+            echo "PUBLIC_API_BASE_URL is missing. Configure it in repository or github-pages environment variables."
+            exit 1
+          fi
 
       - name: Install, build, and upload
         uses: withastro/action@v6
         with:
           package-manager: pnpm@10.12.1
           build-cmd: pnpm run build
-        env:
-          PUBLIC_API_BASE_URL: ${{ vars.PUBLIC_API_BASE_URL }}
-          PUBLIC_API_V1_PATH: ${{ vars.PUBLIC_API_V1_PATH }}
-          PUBLIC_APP_TIMEZONE: ${{ vars.PUBLIC_APP_TIMEZONE }}
 
   deploy:
     needs: build
