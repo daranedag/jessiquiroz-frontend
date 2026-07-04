@@ -29,10 +29,8 @@ jobs:
           build-cmd: pnpm run build
         env:
           PUBLIC_API_BASE_URL: ${{ vars.PUBLIC_API_BASE_URL }}
-          PUBLIC_BOOKING_AVAILABILITY_PATH: ${{ vars.PUBLIC_BOOKING_AVAILABILITY_PATH }}
-          PUBLIC_BOOKING_UPLOAD_PATH: ${{ vars.PUBLIC_BOOKING_UPLOAD_PATH }}
-          PUBLIC_BOOKING_PREBOOK_PATH: ${{ vars.PUBLIC_BOOKING_PREBOOK_PATH }}
-          PUBLIC_BOOKING_CONFIRM_PAYMENT_PATH: ${{ vars.PUBLIC_BOOKING_CONFIRM_PAYMENT_PATH }}
+          PUBLIC_API_V1_PATH: ${{ vars.PUBLIC_API_V1_PATH }}
+          PUBLIC_APP_TIMEZONE: ${{ vars.PUBLIC_APP_TIMEZONE }}
 
   deploy:
     needs: build

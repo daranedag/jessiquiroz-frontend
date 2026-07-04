@@ -1,15 +1,7 @@
 ---
 const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL ?? "";
-const availabilityPath = import.meta.env.PUBLIC_BOOKING_AVAILABILITY_PATH ?? "/calendar/availability";
-const uploadPath = import.meta.env.PUBLIC_BOOKING_UPLOAD_PATH ?? "/uploads";
-const prebookPath = import.meta.env.PUBLIC_BOOKING_PREBOOK_PATH ?? "/appointments/prebook";
-const confirmPaymentPath = import.meta.env.PUBLIC_BOOKING_CONFIRM_PAYMENT_PATH ?? "/appointments/confirm-payment";
-
-const services = [
-  { id: "rejuvenecimiento-facial", name: "Rejuvenecimiento facial" },
-  { id: "armonizacion-corporal", name: "Armonización corporal" },
-  { id: "sanacion-energetica", name: "Sanación energética" },
-];
+const apiV1Path = import.meta.env.PUBLIC_API_V1_PATH ?? "/api/v1";
+const appTimezone = import.meta.env.PUBLIC_APP_TIMEZONE ?? "America/Santiago";
 ---
 
 <section
@@ -17,10 +9,8 @@ const services = [
   class="bg-white py-16"
   data-booking-flow
   data-api-base-url={apiBaseUrl}
-  data-availability-path={availabilityPath}
-  data-upload-path={uploadPath}
-  data-prebook-path={prebookPath}
-  data-confirm-payment-path={confirmPaymentPath}
+  data-api-v1-path={apiV1Path}
+  data-app-timezone={appTimezone}
 >
   <div class="mx-auto max-w-7xl px-6">
     <div class="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
@@ -34,7 +24,7 @@ const services = [
         <div class="mt-8 grid gap-4 text-sm text-slate-700">
           <div class="flex gap-3">
             <span class="material-icons text-primary">event_available</span>
-            <span>La hora queda bloqueada al iniciar el pago.</span>
+            <span>La hora queda retenida al crear la pre-reserva.</span>
           </div>
           <div class="flex gap-3">
             <span class="material-icons text-primary">image</span>
@@ -42,7 +32,7 @@ const services = [
           </div>
           <div class="flex gap-3">
             <span class="material-icons text-primary">verified</span>
-            <span>La confirmación final se valida con el backend después del pago.</span>
+            <span>La reserva se confirma cuando el backend valida el pago.</span>
           </div>
         </div>
       </div>
@@ -81,7 +71,6 @@ const services = [
               name="phone"
               type="tel"
               autocomplete="tel"
-              required
             />
           </label>
           <label class="space-y-2 text-sm font-medium text-text-main">
@@ -90,9 +79,9 @@ const services = [
               class="w-full rounded-2xl border border-primary/20 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
               name="service"
               required
+              data-service-select
             >
-              <option value="">Selecciona</option>
-              {services.map((service) => <option value={service.id}>{service.name}</option>)}
+              <option value="">Cargando servicios...</option>
             </select>
           </label>
         </div>
@@ -117,7 +106,8 @@ const services = [
           </div>
         </div>
 
-        <input type="hidden" name="slotId" data-slot-input />
+        <input type="hidden" name="startsAt" data-starts-at-input />
+        <input type="hidden" name="endsAt" data-ends-at-input />
 
         <label class="space-y-2 text-sm font-medium text-text-main">
           <span>Mensaje</span>
@@ -138,7 +128,7 @@ const services = [
             multiple
             data-file-input
           />
-          <span class="block text-xs font-normal text-slate-500" data-file-summary>Máximo 5 imágenes, 6 MB por archivo.</span>
+          <span class="block text-xs font-normal text-slate-500" data-file-summary>Máximo 6 imágenes, 8 MB por archivo.</span>
         </label>
 
         <label class="flex items-start gap-3 text-sm text-slate-600">
@@ -164,26 +154,56 @@ const services = [
 </section>
 
 <script>
-  type Slot = {
+  type Service = {
     id: string;
-    label: string;
-    start?: string;
-    end?: string;
-    available?: boolean;
+    name: string;
+    description: string | null;
+    duration_minutes: number;
+    price_amount: number;
+    currency: string;
+    active: boolean;
   };
 
-  type UploadedFile = {
-    id?: string;
-    url?: string;
-    name?: string;
+  type Slot = {
+    startsAt: string;
+    endsAt: string;
+    timezone: string;
+  };
+
+  type PreReservationResponse = {
+    data?: {
+      preReservation?: {
+        id: string;
+      };
+      customerToken?: string;
+    };
+  };
+
+  type PaymentResponse = {
+    data?: {
+      paymentId?: string;
+      preferenceId?: string;
+      initPoint?: string | null;
+      sandboxInitPoint?: string | null;
+    };
+  };
+
+  type PaymentStatusResponse = {
+    data?: {
+      preReservationStatus?: string;
+      paymentStatus?: string | null;
+      bookingId?: string | null;
+    };
   };
 
   const flow = document.querySelector<HTMLElement>("[data-booking-flow]");
 
   if (flow) {
     const form = flow.querySelector<HTMLFormElement>("[data-booking-form]");
+    const serviceSelect = flow.querySelector<HTMLSelectElement>("[data-service-select]");
     const slotList = flow.querySelector<HTMLElement>("[data-slot-list]");
-    const slotInput = flow.querySelector<HTMLInputElement>("[data-slot-input]");
+    const startsAtInput = flow.querySelector<HTMLInputElement>("[data-starts-at-input]");
+    const endsAtInput = flow.querySelector<HTMLInputElement>("[data-ends-at-input]");
     const dateInput = flow.querySelector<HTMLInputElement>("[data-date-input]");
     const fileInput = flow.querySelector<HTMLInputElement>("[data-file-input]");
     const fileSummary = flow.querySelector<HTMLElement>("[data-file-summary]");
@@ -192,14 +212,14 @@ const services = [
     const indicators = Array.from(flow.querySelectorAll<HTMLElement>("[data-step-indicator]"));
 
     const apiBaseUrl = flow.dataset.apiBaseUrl?.replace(/\/$/, "") ?? "";
-    const availabilityPath = flow.dataset.availabilityPath ?? "/calendar/availability";
-    const uploadPath = flow.dataset.uploadPath ?? "/uploads";
-    const prebookPath = flow.dataset.prebookPath ?? "/appointments/prebook";
-    const confirmPaymentPath = flow.dataset.confirmPaymentPath ?? "/appointments/confirm-payment";
-    const maxFiles = 5;
-    const maxFileSize = 6 * 1024 * 1024;
+    const apiV1Path = flow.dataset.apiV1Path?.replace(/^\/?/, "/").replace(/\/$/, "") ?? "/api/v1";
+    const timezone = flow.dataset.appTimezone || "America/Santiago";
+    const maxFiles = 6;
+    const maxFileSize = 8 * 1024 * 1024;
+    const reservationIdKey = "jq_pre_reservation_id";
+    const reservationTokenKey = "jq_customer_token";
 
-    const endpoint = (path: string) => `${apiBaseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+    const endpoint = (path: string) => `${apiBaseUrl}${apiV1Path}${path.startsWith("/") ? path : `/${path}`}`;
 
     const setStatus = (message: string, tone: "neutral" | "error" | "success" = "neutral") => {
       if (!statusBox) return;
@@ -228,53 +248,108 @@ const services = [
       submitButton.querySelector("span")?.classList.toggle("animate-pulse", busy);
     };
 
-    const normalizeSlot = (slot: unknown): Slot | null => {
-      if (typeof slot === "string") {
-        return { id: slot, label: slot, available: true };
+    const getApiError = async (response: Response, fallback: string) => {
+      try {
+        const payload = await response.json();
+        return payload?.error?.message ?? payload?.error?.code ?? fallback;
+      } catch {
+        return fallback;
       }
-      if (!slot || typeof slot !== "object") return null;
-      const value = slot as Record<string, unknown>;
-      const id = String(value.id ?? value.slotId ?? value.start ?? "");
-      if (!id) return null;
-      const start = typeof value.start === "string" ? value.start : undefined;
-      const end = typeof value.end === "string" ? value.end : undefined;
-      const label = String(value.label ?? value.time ?? formatSlotLabel(start, end) ?? id);
+    };
+
+    const formatMoney = (amount: number, currency: string) =>
+      new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      }).format(amount);
+
+    const formatSlotLabel = (slot: Slot) => {
+      const start = new Date(slot.startsAt);
+      const end = new Date(slot.endsAt);
+      return `${start.toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: slot.timezone || timezone,
+      })} - ${end.toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: slot.timezone || timezone,
+      })}`;
+    };
+
+    const getDayRange = (date: string) => {
+      const start = new Date(`${date}T00:00:00`);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 1);
       return {
-        id,
-        label,
-        start,
-        end,
-        available: value.available !== false,
+        from: start.toISOString(),
+        to: end.toISOString(),
       };
     };
 
-    const formatSlotLabel = (start?: string, end?: string) => {
-      if (!start) return undefined;
-      const startLabel = start.includes("T") ? new Date(start).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }) : start;
-      if (!end) return startLabel;
-      const endLabel = end.includes("T") ? new Date(end).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }) : end;
-      return `${startLabel} - ${endLabel}`;
+    const clearSlots = (message = "Elige servicio y fecha.") => {
+      if (!slotList || !startsAtInput || !endsAtInput) return;
+      startsAtInput.value = "";
+      endsAtInput.value = "";
+      slotList.innerHTML = `<p class="col-span-full rounded-2xl bg-white px-4 py-3 text-sm text-slate-500">${message}</p>`;
     };
 
-    const renderSlots = (slots: Slot[]) => {
-      if (!slotList || !slotInput) return;
-      slotInput.value = "";
-      slotList.innerHTML = "";
-
-      const availableSlots = slots.filter((slot) => slot.available !== false);
-      if (!availableSlots.length) {
-        slotList.innerHTML = '<p class="col-span-full rounded-2xl bg-white px-4 py-3 text-sm text-slate-500">No hay horas disponibles para esa fecha.</p>';
+    const loadServices = async () => {
+      if (!serviceSelect) return;
+      if (!apiBaseUrl) {
+        serviceSelect.innerHTML = '<option value="">Configura PUBLIC_API_BASE_URL</option>';
+        setStatus("Falta configurar PUBLIC_API_BASE_URL.", "error");
         return;
       }
 
-      availableSlots.forEach((slot) => {
+      try {
+        const response = await fetch(endpoint("/services"), { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error(await getApiError(response, "No se pudieron cargar los servicios."));
+        const payload = await response.json();
+        const services = (payload.data ?? []) as Service[];
+        const activeServices = services.filter((service) => service.active);
+
+        serviceSelect.innerHTML = '<option value="">Selecciona</option>';
+        activeServices.forEach((service) => {
+          const option = document.createElement("option");
+          option.value = service.id;
+          option.textContent = `${service.name} · ${service.duration_minutes} min · ${formatMoney(
+            service.price_amount,
+            service.currency
+          )}`;
+          serviceSelect.append(option);
+        });
+
+        if (!activeServices.length) {
+          serviceSelect.innerHTML = '<option value="">No hay servicios disponibles</option>';
+        }
+      } catch (error) {
+        serviceSelect.innerHTML = '<option value="">No se pudieron cargar servicios</option>';
+        setStatus(error instanceof Error ? error.message : "No se pudieron cargar los servicios.", "error");
+      }
+    };
+
+    const renderSlots = (slots: Slot[]) => {
+      if (!slotList || !startsAtInput || !endsAtInput) return;
+      startsAtInput.value = "";
+      endsAtInput.value = "";
+      slotList.innerHTML = "";
+
+      if (!slots.length) {
+        clearSlots("No hay horas disponibles para esa fecha.");
+        return;
+      }
+
+      slots.forEach((slot) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className =
           "rounded-2xl border border-primary/20 bg-white px-4 py-3 text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary hover:text-white";
-        button.textContent = slot.label;
+        button.textContent = formatSlotLabel(slot);
         button.addEventListener("click", () => {
-          slotInput.value = slot.id;
+          startsAtInput.value = slot.startsAt;
+          endsAtInput.value = slot.endsAt;
           slotList.querySelectorAll("button").forEach((item) => {
             item.classList.remove("border-primary", "bg-primary", "text-white");
             item.classList.add("border-primary/20", "bg-white", "text-primary");
@@ -291,11 +366,11 @@ const services = [
     const loadAvailability = async () => {
       if (!form || !slotList) return;
       const formData = new FormData(form);
-      const service = String(formData.get("service") ?? "");
+      const serviceId = String(formData.get("service") ?? "");
       const date = String(formData.get("date") ?? "");
 
-      if (!service || !date) {
-        renderSlots([]);
+      if (!serviceId || !date) {
+        clearSlots();
         setStatus("Elige servicio y fecha para consultar disponibilidad.");
         return;
       }
@@ -309,16 +384,18 @@ const services = [
       slotList.innerHTML = '<p class="col-span-full rounded-2xl bg-white px-4 py-3 text-sm text-slate-500">Consultando disponibilidad...</p>';
 
       try {
-        const url = new URL(endpoint(availabilityPath));
-        url.searchParams.set("service", service);
-        url.searchParams.set("date", date);
+        const { from, to } = getDayRange(date);
+        const url = new URL(endpoint("/availability"));
+        url.searchParams.set("serviceId", serviceId);
+        url.searchParams.set("from", from);
+        url.searchParams.set("to", to);
+        url.searchParams.set("timezone", timezone);
         const response = await fetch(url, { headers: { Accept: "application/json" } });
-        if (!response.ok) throw new Error("No se pudo consultar disponibilidad.");
+        if (!response.ok) throw new Error(await getApiError(response, "No se pudo consultar disponibilidad."));
         const payload = await response.json();
-        const rawSlots = Array.isArray(payload) ? payload : payload.slots ?? payload.data ?? [];
-        renderSlots(rawSlots.map(normalizeSlot).filter(Boolean) as Slot[]);
+        renderSlots((payload.data ?? []) as Slot[]);
       } catch (error) {
-        renderSlots([]);
+        clearSlots("No se pudo consultar disponibilidad.");
         setStatus(error instanceof Error ? error.message : "No se pudo consultar disponibilidad.", "error");
       }
     };
@@ -330,31 +407,16 @@ const services = [
       }
       const invalidFile = files.find((file) => !file.type.startsWith("image/") || file.size > maxFileSize);
       if (invalidFile) {
-        throw new Error(`Revisa ${invalidFile.name}: solo imágenes de hasta 6 MB.`);
+        throw new Error(`Revisa ${invalidFile.name}: solo imágenes de hasta 8 MB.`);
       }
       if (fileSummary) {
-        fileSummary.textContent = files.length ? `${files.length} imagen(es) seleccionada(s).` : "Máximo 5 imágenes, 6 MB por archivo.";
+        fileSummary.textContent = files.length ? `${files.length} imagen(es) seleccionada(s).` : "Máximo 6 imágenes, 8 MB por archivo.";
       }
       return files;
     };
 
-    const uploadFiles = async (files: File[]) => {
-      if (!files.length) return [];
-      const body = new FormData();
-      files.forEach((file) => body.append("files", file));
-
-      const response = await fetch(endpoint(uploadPath), {
-        method: "POST",
-        body,
-      });
-      if (!response.ok) throw new Error("No se pudieron subir las imágenes.");
-      const payload = await response.json();
-      const uploads = Array.isArray(payload) ? payload : payload.files ?? payload.data ?? [];
-      return uploads as UploadedFile[];
-    };
-
-    const createPrebooking = async (payload: Record<string, unknown>) => {
-      const response = await fetch(endpoint(prebookPath), {
+    const createPreReservation = async (payload: Record<string, unknown>) => {
+      const response = await fetch(endpoint("/pre-reservations"), {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -362,47 +424,82 @@ const services = [
         },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error("No se pudo iniciar la reserva.");
-      return response.json();
+      if (!response.ok) throw new Error(await getApiError(response, "No se pudo iniciar la pre-reserva."));
+      return response.json() as Promise<PreReservationResponse>;
     };
 
-    const confirmPayment = async () => {
+    const uploadImages = async (preReservationId: string, customerToken: string, files: File[]) => {
+      if (!files.length) return [];
+      const body = new FormData();
+      files.forEach((file) => body.append("images", file));
+
+      const response = await fetch(endpoint(`/pre-reservations/${preReservationId}/images`), {
+        method: "POST",
+        headers: {
+          "X-Reservation-Token": customerToken,
+        },
+        body,
+      });
+      if (!response.ok) throw new Error(await getApiError(response, "No se pudieron subir las imágenes."));
+      const payload = await response.json();
+      return payload.data ?? [];
+    };
+
+    const createPayment = async (preReservationId: string, customerToken: string) => {
+      const response = await fetch(endpoint(`/pre-reservations/${preReservationId}/payment`), {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "X-Reservation-Token": customerToken,
+        },
+      });
+      if (!response.ok) throw new Error(await getApiError(response, "No se pudo crear la preferencia de pago."));
+      return response.json() as Promise<PaymentResponse>;
+    };
+
+    const checkPaymentStatus = async () => {
       if (!apiBaseUrl) return;
       const params = new URLSearchParams(window.location.search);
       const status = params.get("payment_status") ?? params.get("status") ?? params.get("collection_status");
-      const approved = status === "success" || status === "approved";
-      if (!approved) return;
+      const shouldCheck = status === "success" || status === "approved" || status === "pending";
+      if (!shouldCheck) return;
 
-      const prebookingId =
-        params.get("prebooking_id") ?? params.get("external_reference") ?? window.sessionStorage.getItem("jq_prebooking_id");
-      if (!prebookingId) {
-        setStatus("Pago aprobado, pero falta el identificador de pre-reserva.", "error");
+      const preReservationId =
+        params.get("preReservationId") ?? window.sessionStorage.getItem(reservationIdKey);
+      const customerToken = window.sessionStorage.getItem(reservationTokenKey);
+
+      if (!preReservationId || !customerToken) {
+        setStatus("Pago recibido, pero falta información local para consultar el estado.", "error");
         return;
       }
 
       setStep("3");
-      setStatus("Validando pago y confirmando reserva...");
+      setStatus("Consultando estado del pago...");
 
       try {
-        const response = await fetch(endpoint(confirmPaymentPath), {
-          method: "POST",
+        const response = await fetch(endpoint(`/pre-reservations/${preReservationId}/payment-status`), {
           headers: {
             Accept: "application/json",
-            "Content-Type": "application/json",
+            "X-Reservation-Token": customerToken,
           },
-          body: JSON.stringify({
-            prebookingId,
-            paymentId: params.get("payment_id") ?? params.get("collection_id"),
-            preferenceId: params.get("preference_id"),
-            merchantOrderId: params.get("merchant_order_id"),
-            status,
-          }),
         });
-        if (!response.ok) throw new Error("El pago fue recibido, pero la confirmación quedó pendiente.");
-        window.sessionStorage.removeItem("jq_prebooking_id");
-        setStatus("Pago confirmado. Tu hora quedó agendada.", "success");
+        if (!response.ok) throw new Error(await getApiError(response, "No se pudo consultar el estado del pago."));
+        const payload = (await response.json()) as PaymentStatusResponse;
+        const data = payload.data;
+
+        if (data?.bookingId) {
+          setStatus("Pago confirmado. Tu hora quedó agendada.", "success");
+          return;
+        }
+
+        if (data?.paymentStatus === "pending" || data?.preReservationStatus === "awaiting_payment") {
+          setStatus("El pago está pendiente. Te avisaremos cuando el backend confirme la reserva.");
+          return;
+        }
+
+        setStatus("Aún no hay confirmación de reserva. Revisa nuevamente en unos minutos.");
       } catch (error) {
-        setStatus(error instanceof Error ? error.message : "No se pudo confirmar la reserva.", "error");
+        setStatus(error instanceof Error ? error.message : "No se pudo consultar el estado del pago.", "error");
       }
     };
 
@@ -430,46 +527,51 @@ const services = [
         if (!form.reportValidity()) return;
 
         const formData = new FormData(form);
-        const slotId = String(formData.get("slotId") ?? "");
-        if (!slotId) throw new Error("Selecciona una hora disponible.");
+        const serviceId = String(formData.get("service") ?? "");
+        const startsAt = String(formData.get("startsAt") ?? "");
+        const endsAt = String(formData.get("endsAt") ?? "");
+        if (!startsAt || !endsAt) throw new Error("Selecciona una hora disponible.");
 
         setBusy(true);
-        setStatus("Preparando la pre-reserva...");
+        setStatus("Creando pre-reserva...");
 
         const files = validateFiles();
-        const uploadedFiles = await uploadFiles(files);
-
-        const returnUrl = new URL(window.location.href);
-        returnUrl.search = "";
-
-        const prebooking = await createPrebooking({
-          customer: {
-            name: formData.get("name"),
+        const preReservationPayload = {
+          serviceId,
+          startsAt,
+          timezone,
+          client: {
+            fullName: formData.get("name"),
             email: formData.get("email"),
-            phone: formData.get("phone"),
+            phone: formData.get("phone") || undefined,
+            notes: formData.get("notes") || undefined,
+            formData: {
+              endsAt,
+              source: "github-pages-frontend",
+            },
           },
-          service: formData.get("service"),
-          date: formData.get("date"),
-          slotId,
-          notes: formData.get("notes"),
-          files: uploadedFiles,
-          payment: {
-            successUrl: `${returnUrl.toString()}?payment_status=success`,
-            failureUrl: `${returnUrl.toString()}?payment_status=failure`,
-            pendingUrl: `${returnUrl.toString()}?payment_status=pending`,
-          },
-        });
+        };
 
-        const prebookingId = prebooking.prebookingId ?? prebooking.id ?? prebooking.externalReference;
-        const paymentUrl = prebooking.paymentUrl ?? prebooking.initPoint ?? prebooking.checkoutUrl;
-
-        if (!paymentUrl) throw new Error("El backend no devolvió una URL de pago.");
-        if (prebookingId) {
-          window.sessionStorage.setItem("jq_prebooking_id", String(prebookingId));
+        const preReservationResult = await createPreReservation(preReservationPayload);
+        const preReservation = preReservationResult.data?.preReservation;
+        const customerToken = preReservationResult.data?.customerToken;
+        if (!preReservation?.id || !customerToken) {
+          throw new Error("El backend no devolvió pre-reserva o token de cliente.");
         }
 
+        window.sessionStorage.setItem(reservationIdKey, preReservation.id);
+        window.sessionStorage.setItem(reservationTokenKey, customerToken);
+
+        setStatus("Subiendo imágenes...");
+        await uploadImages(preReservation.id, customerToken, files);
+
+        setStatus("Creando preferencia de pago...");
+        const paymentResult = await createPayment(preReservation.id, customerToken);
+        const checkoutUrl = paymentResult.data?.initPoint ?? paymentResult.data?.sandboxInitPoint;
+        if (!checkoutUrl) throw new Error("El backend no devolvió una URL de pago.");
+
         setStatus("Redirigiendo al pago...");
-        window.location.href = String(paymentUrl);
+        window.location.href = checkoutUrl;
       } catch (error) {
         setStatus(error instanceof Error ? error.message : "No se pudo completar la pre-reserva.", "error");
         setBusy(false);
@@ -480,6 +582,7 @@ const services = [
       dateInput.min = new Date().toISOString().split("T")[0];
     }
 
-    confirmPayment();
+    loadServices();
+    checkPaymentStatus();
   }
 </script>

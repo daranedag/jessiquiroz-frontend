@@ -23,10 +23,8 @@ Crear un archivo `.env` local con las variables públicas necesarias para el fro
 
 ```sh
 PUBLIC_API_BASE_URL=https://tu-backend-en-render.onrender.com
-PUBLIC_BOOKING_AVAILABILITY_PATH=/calendar/availability
-PUBLIC_BOOKING_UPLOAD_PATH=/uploads
-PUBLIC_BOOKING_PREBOOK_PATH=/appointments/prebook
-PUBLIC_BOOKING_CONFIRM_PAYMENT_PATH=/appointments/confirm-payment
+PUBLIC_API_V1_PATH=/api/v1
+PUBLIC_APP_TIMEZONE=America/Santiago
 ```
 
 Las variables con prefijo `PUBLIC_` quedan expuestas al navegador. No guardar secretos, tokens privados ni credenciales de MercadoPago en el frontend.
@@ -46,9 +44,37 @@ pnpm run preview
 
 ## Flujo de agendamiento
 
-El frontend solicita horarios disponibles al backend, toma los datos del cliente, sube archivos, crea una pre-reserva y redirige al pago de MercadoPago. Al volver desde el pago exitoso, confirma la reserva contra el backend.
+El frontend sigue el contrato de `BACKEND_CONTRACT.md`:
 
-El contrato exacto de endpoints se puede ajustar en `src/components/BookingFlow.astro` cuando estén definidas las rutas finales del backend.
+1. `GET /api/v1/services`
+2. `GET /api/v1/availability?serviceId=<id>&from=<iso>&to=<iso>&timezone=America/Santiago`
+3. `POST /api/v1/pre-reservations`
+4. Guardar `preReservation.id` y `customerToken` en `sessionStorage`
+5. `POST /api/v1/pre-reservations/:id/images` con `X-Reservation-Token`
+6. `POST /api/v1/pre-reservations/:id/payment` con `X-Reservation-Token`
+7. Redirigir a `initPoint` o `sandboxInitPoint`
+8. Al volver desde Mercado Pago, consultar `GET /api/v1/pre-reservations/:id/payment-status`
+
+El frontend publico no debe usar `X-Admin-Api-Key` ni `X-Internal-Job-Secret`.
+
+## Endpoints Consumidos
+
+Todos los endpoints se construyen con:
+
+```txt
+PUBLIC_API_BASE_URL + PUBLIC_API_V1_PATH
+```
+
+Endpoints publicos usados por el frontend:
+
+```txt
+GET  /services
+GET  /availability
+POST /pre-reservations
+POST /pre-reservations/:id/images
+POST /pre-reservations/:id/payment
+GET  /pre-reservations/:id/payment-status
+```
 
 ## Deploy
 
