@@ -1,6 +1,8 @@
 ---
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const logoColor = `${basePath}/logo_color.png`;
+const homeHref = `${basePath || ""}/`;
+const sectionHref = (hash: string) => `${homeHref}${hash}`;
 ---
 
 <footer class="border-t border-primary/10 bg-white py-16">
@@ -12,20 +14,20 @@ const logoColor = `${basePath}/logo_color.png`;
           <span class="font-display text-xl font-semibold text-primary">Jessica Quiroz</span>
         </div>
         <p class="mt-4 text-sm text-slate-600">
-          Sanación energética y rejuvenecimiento consciente para una vida en armonía.
+          Sanaci&oacute;n energ&eacute;tica y rejuvenecimiento consciente para una vida en armon&iacute;a.
         </p>
       </div>
       <div>
-        <h4 class="text-xs font-semibold uppercase tracking-[0.3em] text-text-main">Navegación</h4>
+        <h4 class="text-xs font-semibold uppercase tracking-[0.3em] text-text-main">Navegaci&oacute;n</h4>
         <ul class="mt-4 space-y-3 text-sm text-slate-600">
-          <li><a class="hover:text-primary" href="#cronologia">Cronología</a></li>
-          <li><a class="hover:text-primary" href="#cursos">Cursos</a></li>
-          <li><a class="hover:text-primary" href="#nociones">Nociones</a></li>
-          <li><a class="hover:text-primary" href="#experiencias">Experiencias</a></li>
-          <li><a class="hover:text-primary" href="#rejuvenecimiento">Rejuvenecimiento</a></li>
-          <li><a class="hover:text-primary" href="#testimonios">Testimonios</a></li>
-          <li><a class="hover:text-primary" href="#reflexiones">Reflexiones</a></li>
-          <li><a class="hover:text-primary" href="#agendamiento">Reservar</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#cronologia")}>Cronolog&iacute;a</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#cursos")}>Cursos</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#nociones")}>Nociones</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#experiencias")}>Experiencias</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#rejuvenecimiento")}>Rejuvenecimiento</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#testimonios")}>Testimonios</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#reflexiones")}>Reflexiones</a></li>
+          <li><a class="hover:text-primary" href={sectionHref("#agendamiento")}>Reservar</a></li>
         </ul>
       </div>
       <div>
@@ -33,12 +35,12 @@ const logoColor = `${basePath}/logo_color.png`;
         <p class="mt-4 text-sm text-slate-600">jessica@quiroz.com</p>
         <div class="mt-4 flex gap-3">
           <a class="rounded-full border border-primary/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary" href="https://www.instagram.com" target="_blank" rel="noreferrer">Instagram</a>
-          <a class="rounded-full border border-primary/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary" href="#agendamiento">Reserva</a>
+          <a class="rounded-full border border-primary/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary" href={sectionHref("#agendamiento")}>Reserva</a>
         </div>
       </div>
     </div>
-    <div class="mt-12 flex items-center justify-center border-t border-primary/10 pt-6 text-xs uppercase tracking-[0.3em] text-slate-400 text-center">
-      <p>© 2026 Jessica Quiroz. Todos los derechos reservados.</p>
+    <div class="mt-12 flex items-center justify-center border-t border-primary/10 pt-6 text-center text-xs uppercase tracking-[0.3em] text-slate-400">
+      <p>&copy; 2026 Jessica Quiroz. Todos los derechos reservados.</p>
     </div>
   </div>
 </footer>

@@ -1,0 +1,171 @@
+---
+type ReturnKind = "success" | "pending" | "failure";
+
+type Props = {
+  kind: ReturnKind;
+  eyebrow: string;
+  title: string;
+  description: string;
+  icon: string;
+  tone: "success" | "pending" | "error";
+};
+
+const { kind, eyebrow, title, description, icon, tone } = Astro.props;
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const homeHref = `${basePath || ""}/`;
+const bookingHref = `${homeHref}#agendamiento`;
+const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || "";
+const apiV1Path = import.meta.env.PUBLIC_API_V1_PATH || "/api/v1";
+
+const toneClasses = {
+  success: "border-primary/20 bg-primary/10 text-primary",
+  pending: "border-cta/40 bg-cta/15 text-text-main",
+  error: "border-red-200 bg-red-50 text-red-700",
+};
+
+const iconClasses = {
+  success: "bg-primary text-white",
+  pending: "bg-cta text-text-main",
+  error: "bg-red-100 text-red-700",
+};
+---
+
+<section
+  class="min-h-[calc(100vh-5rem)] bg-background py-24"
+  data-payment-return
+  data-return-kind={kind}
+  data-api-base-url={apiBaseUrl}
+  data-api-v1-path={apiV1Path}
+>
+  <div class="mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
+    <div class={`flex h-20 w-20 items-center justify-center rounded-full ${iconClasses[tone]}`}>
+      <span class="material-icons text-4xl">{icon}</span>
+    </div>
+
+    <p class="mt-8 text-xs font-semibold uppercase tracking-[0.3em] text-secondary">{eyebrow}</p>
+    <h1 class="mt-3 font-display text-4xl text-text-main sm:text-5xl">{title}</h1>
+    <p class="mt-5 max-w-2xl text-sm leading-7 text-slate-600">{description}</p>
+
+    <div class={`mt-8 w-full max-w-2xl rounded-2xl border px-5 py-4 text-sm leading-6 ${toneClasses[tone]}`} role="status" data-payment-status>
+      Revisando la informacion del pago...
+    </div>
+
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <a
+        class="inline-flex items-center justify-center gap-2 rounded-full bg-cta px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-text-main shadow-lg ring-2 ring-cta/70 transition hover:-translate-y-0.5 hover:shadow-2xl"
+        href={bookingHref}
+      >
+        <span class="material-icons text-base">event_available</span>
+        Ir a reservar
+      </a>
+      <a
+        class="inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-white px-7 py-3 text-xs font-bold uppercase tracking-[0.2em] text-primary transition hover:border-primary hover:bg-primary hover:text-white"
+        href={homeHref}
+      >
+        <span class="material-icons text-base">home</span>
+        Volver al inicio
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  type PaymentStatusResponse = {
+    data?: {
+      preReservationStatus?: string;
+      paymentStatus?: string | null;
+      bookingId?: string | null;
+    };
+  };
+
+  const paymentReturn = document.querySelector<HTMLElement>("[data-payment-return]");
+
+  if (paymentReturn) {
+    const statusBox = paymentReturn.querySelector<HTMLElement>("[data-payment-status]");
+    const returnKind = paymentReturn.dataset.returnKind;
+    const apiBaseUrl = paymentReturn.dataset.apiBaseUrl?.replace(/\/$/, "") || "";
+    const apiV1Path = paymentReturn.dataset.apiV1Path?.replace(/^\/?/, "/").replace(/\/$/, "") || "/api/v1";
+    const reservationIdKey = "jq_pre_reservation_id";
+    const reservationTokenKey = "jq_customer_token";
+
+    const endpoint = (path: string) => `${apiBaseUrl}${apiV1Path}${path.startsWith("/") ? path : `/${path}`}`;
+
+    const setStatus = (message: string, tone: "neutral" | "success" | "error" = "neutral") => {
+      if (!statusBox) return;
+      const toneClasses = {
+        neutral: "border-primary/10 bg-white text-slate-600",
+        success: "border-primary/20 bg-primary/10 text-primary",
+        error: "border-red-200 bg-red-50 text-red-700",
+      };
+      statusBox.className = `mt-8 w-full max-w-2xl rounded-2xl border px-5 py-4 text-sm leading-6 ${toneClasses[tone]}`;
+      statusBox.textContent = message;
+    };
+
+    const getApiError = async (response: Response, fallback: string) => {
+      try {
+        const payload = await response.json();
+        return payload?.error?.message ?? payload?.error?.code ?? fallback;
+      } catch {
+        return fallback;
+      }
+    };
+
+    const checkPaymentStatus = async () => {
+      if (!apiBaseUrl) {
+        setStatus("Ruta de retorno activa. Falta configurar PUBLIC_API_BASE_URL para consultar el estado automaticamente.");
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const preReservationId =
+        params.get("preReservationId") ??
+        params.get("pre_reservation_id") ??
+        params.get("external_reference") ??
+        window.sessionStorage.getItem(reservationIdKey);
+      const customerToken = window.sessionStorage.getItem(reservationTokenKey);
+
+      if (!preReservationId || !customerToken) {
+        if (returnKind === "failure") {
+          setStatus("No pudimos consultar el detalle automaticamente. Puedes intentar reservar nuevamente o contactarnos si el cargo aparece en tu medio de pago.", "error");
+          return;
+        }
+
+        setStatus("La ruta de retorno esta activa. Para consultar el estado automaticamente, vuelve desde el mismo navegador donde iniciaste la reserva.");
+        return;
+      }
+
+      try {
+        const response = await fetch(endpoint(`/pre-reservations/${preReservationId}/payment-status`), {
+          headers: {
+            Accept: "application/json",
+            "X-Reservation-Token": customerToken,
+          },
+        });
+        if (!response.ok) throw new Error(await getApiError(response, "No se pudo consultar el estado del pago."));
+        const payload = (await response.json()) as PaymentStatusResponse;
+        const data = payload.data;
+
+        if (data?.bookingId) {
+          setStatus("Pago confirmado. Tu hora quedo agendada.", "success");
+          return;
+        }
+
+        if (data?.paymentStatus === "pending" || data?.preReservationStatus === "awaiting_payment") {
+          setStatus("El pago esta pendiente. Te avisaremos cuando la reserva quede confirmada.");
+          return;
+        }
+
+        if (returnKind === "failure") {
+          setStatus("El pago no fue confirmado. Puedes volver a intentar la reserva cuando quieras.", "error");
+          return;
+        }
+
+        setStatus("Aun no hay confirmacion de reserva. Revisa nuevamente en unos minutos.");
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : "No se pudo consultar el estado del pago.", "error");
+      }
+    };
+
+    checkPaymentStatus();
+  }
+</script>

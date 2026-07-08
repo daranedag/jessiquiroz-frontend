@@ -57,6 +57,18 @@ El frontend sigue el contrato de `BACKEND_CONTRACT.md`:
 
 El frontend publico no debe usar `X-Admin-Api-Key` ni `X-Internal-Job-Secret`.
 
+## Rutas de retorno de pagos
+
+Configurar estas URLs como `back_urls` en Mercado Pago, respetando el dominio final y el `base` de GitHub Pages:
+
+```txt
+success: https://daranedag.github.io/jessiquiroz-frontend/pagos/exito
+pending: https://daranedag.github.io/jessiquiroz-frontend/pagos/pendiente
+failure: https://daranedag.github.io/jessiquiroz-frontend/pagos/error
+```
+
+Las rutas tambien aceptan los parametros que agregue Mercado Pago y consultan el estado con `GET /pre-reservations/:id/payment-status` cuando existe la informacion local de la pre-reserva en `sessionStorage`.
+
 ## Endpoints Consumidos
 
 Todos los endpoints se construyen con:
