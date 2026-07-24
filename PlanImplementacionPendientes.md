@@ -35,17 +35,16 @@ Este documento vincula las respuestas entregadas con cada requisito de `PlanImpl
 ### Identidad de marca
 
 - [ ] Confirmar la compra, propiedad y DNS de `jessicaquiroz.cl`.
-- [ ] Crear el manual de marca a partir de la identidad visual aprobada.
 - [ ] Cuando el dominio esté listo, configurar GitHub Pages, `site` y `base` de Astro, además de las URLs de retorno de Mercado Pago.
 
 ### Datos de contacto
 
-- [ ] Definir el correo oficial para comunicaciones operativas y legales. No se publicará en el sitio hasta recibirlo.
-- [ ] Definir usuario y enlace de Instagram, si se incorporará.
+- [ ] Definir el correo oficial para comunicaciones operativas y legales. No se publicará en el sitio.
+- [ ] Definir usuario y enlace de Instagram, si se incorporará en el sitio. (Esto lleva a hablar sobre publicidad para el sitio).
 
 ### Contenido del sitio
 
-- [ ] Entregar o aprobar biografía, historia personal, estudios, certificaciones, método y servicios reales.
+- [ ] Entregar biografía, historia personal, estudios, certificaciones, método y servicios a ofrecer.
 - [ ] Validar o reemplazar textos de reflexiones, tratamientos y afirmaciones de resultados físicos o de bienestar.
 - [ ] Redactar descripción para buscadores; puede generarse con IA y requerirá aprobación de la clienta.
 - [ ] Definir palabras clave y servicios prioritarios para SEO.
@@ -54,24 +53,22 @@ Este documento vincula las respuestas entregadas con cada requisito de `PlanImpl
 ### Fotografías y testimonios
 
 - [ ] Entregar fotografías para portada, secciones y sesiones; confirmar sus derechos de publicación.
-- [ ] Decidir si se usarán fotografías de antes y después y, de ser así, reunir autorizaciones explícitas.
+- [ ] Decidir si se usarán fotografías de antes/después y, de ser así, reunir autorizaciones explícitas.
 - [ ] Entregar testimonios reales, con las iniciales que se mostrarán.
 - [ ] Obtener autorización de publicación de cada testimonio.
 - [ ] Crear o entregar imagen para compartir en WhatsApp y redes sociales.
 
 ### Formulario de reserva
 
-- [ ] Definir qué imágenes pueden adjuntarse y su finalidad; reflejarlo junto al campo de carga.
+- [ ] Definir qué imágenes deben adjuntarse y su finalidad; reflejarlo junto al campo de carga.
 - [ ] Redactar y aprobar el consentimiento específico para datos e imágenes. Un checkbox solo es suficiente si enlaza a un texto claro que describa finalidad, base de consentimiento, conservación, acceso y eliminación; no reemplaza la política de privacidad.
 - [ ] Definir instrucciones previas a la reserva.
 - [ ] Definir mensajes definitivos para pagos aprobados, pendientes y rechazados.
-- [ ] Definir el canal de soporte para incidencias de pago o reserva, sin exponer datos que deban comunicarse tras la confirmación.
+- [ ] Definir el canal de soporte para incidencias de pago o reserva, sin exponer datos que deban comunicarse tras la confirmación. (Mail)
 
 ### Privacidad y condiciones
 
-- [ ] Generar con IA un borrador de política de privacidad y revisarlo antes de publicar.
-- [ ] Generar con IA un borrador de términos y condiciones y revisarlo antes de publicar.
-- [ ] Consultar y definir políticas de cancelación, reprogramación y devoluciones.
+- [ ] Revisar los documentos legales y agregar los datos que faltan.
 - [ ] Definir el plazo de conservación de datos e imágenes.
 - [ ] Generar procedimiento para solicitar eliminación de información.
 - [ ] Consultar a la clienta el alcance de los servicios de bienestar y redactar el descargo correspondiente.
@@ -79,7 +76,7 @@ Este documento vincula las respuestas entregadas con cada requisito de `PlanImpl
 
 ### Dominio, publicación y medición
 
-- [ ] Crear la organización de GitHub y transferir o publicar el repositorio allí.
+- [ ] Crear la organización de GitHub y transferir o publicar el repositorio allí. (Diego)
 - [ ] Decidir si se implementará analítica y crear/configurar la cuenta elegida.
 - [ ] Definir banner de cookies: no es necesario mientras no se usen cookies no esenciales. Si se activa analítica o marketing que use cookies o tecnologías equivalentes, implementar consentimiento previo y el banner.
 - [ ] Establecer la fecha prevista de publicación.

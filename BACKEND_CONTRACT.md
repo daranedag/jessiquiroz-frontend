@@ -210,6 +210,40 @@ type CalendarEvent = {
 
 ## Endpoints Publicos
 
+### Solicitar eliminación de información personal
+
+```http
+POST /api/v1/privacy/deletion-requests
+Content-Type: application/json
+```
+
+Body:
+
+```ts
+{
+  email: string;
+}
+```
+
+Respuesta:
+
+```json
+{
+  "data": {
+    "accepted": true
+  }
+}
+```
+
+El endpoint debe responder de forma genérica, sin revelar si el correo existe o si tiene reservas asociadas. Debe registrar la solicitud y enviar un correo de verificación al email indicado; no debe eliminar datos hasta que la persona verifique el enlace. Tras la verificación, el flujo administrativo debe evaluar y ejecutar la eliminación o anonimización aplicable, conservando únicamente la información exigida por obligaciones legales.
+
+Errores posibles:
+
+```txt
+400 validation_error
+429 rate_limited
+```
+
 ### Health
 
 ```http
