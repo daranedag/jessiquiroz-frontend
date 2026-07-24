@@ -1,6 +1,6 @@
-# Jessica Quiroz Frontend
+# Jessica Quiróz Frontend
 
-Frontend Astro para la landing y flujo de pre-agendamiento de Jessica Quiroz.
+Frontend Astro para la landing y flujo de pre-agendamiento de Jessica Quiróz.
 
 ## Stack
 
